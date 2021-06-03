@@ -34,7 +34,6 @@ fn main() {
         BACKGROUND_COLOR,
         GRID_SIZE,
         BOARD_SIZE,
-        Snake::new((5.0, 5.0), Direction::Right),
     );
 
 

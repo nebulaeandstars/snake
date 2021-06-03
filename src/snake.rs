@@ -83,7 +83,7 @@ impl Snake {
 
 
     pub fn overlaps(&self, position: (f32, f32)) -> bool {
-        for square in self.get_squares().iter() {
+        for square in self.get_squares()[1..].iter() {
             if square.get_position() == position {
                 return true;
             }

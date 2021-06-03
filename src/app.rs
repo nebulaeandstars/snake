@@ -8,7 +8,7 @@ pub struct App {
 }
 
 use opengl_graphics::GlGraphics;
-use piston::input::{Button, Key, RenderArgs, UpdateArgs};
+use piston::input::{Button, Key, RenderArgs};
 
 use crate::direction::Direction;
 use crate::snake::Snake;
@@ -21,11 +21,19 @@ impl App {
         background: [f32; 4],
         grid_size: f32,
         board_size: (f32, f32),
-        snake: Snake,
     ) -> App {
         println!("starting...");
 
-        let food = Food::new_food(get_random_grid_position(board_size.0, board_size.1));
+        // get an initial snake and food
+        let snake_pos = get_random_grid_position(board_size.0, board_size.1);
+        let snake = Snake::new(snake_pos, Direction::Right);
+
+        let mut food_pos = get_random_grid_position(board_size.0, board_size.1);
+        while snake_pos != food_pos && snake.overlaps(food_pos) {
+            food_pos = get_random_grid_position(board_size.0, board_size.1);
+        }
+        let food = Food::new_food(food_pos);
+
 
         App {
             gl: gl,
@@ -101,11 +109,27 @@ impl App {
             // move the food to somewhere else until it hits a valid position.
             while food_pos == snake_head || self.snake.overlaps(food_pos) {
                 food_pos = get_random_grid_position(self.board_size.0, self.board_size.1);
-                self.food.set_position(food_pos);
             }
+            self.food.set_position(food_pos);
 
             // and grow the snake
             self.snake.grow(1);
+        }
+
+        if self.snake.overlaps(snake_head) {
+            // get a new snake and food
+            let snake_pos = get_random_grid_position(self.board_size.0, self.board_size.1);
+            let snake = Snake::new(snake_pos, Direction::Right);
+
+            let mut food_pos = get_random_grid_position(self.board_size.0, self.board_size.1);
+            while snake_pos != food_pos && snake.overlaps(food_pos) {
+                food_pos = get_random_grid_position(self.board_size.0, self.board_size.1);
+            }
+            let food = Food::new_food(food_pos);
+
+            // then set throw away the current snake and food for the new ones
+            self.snake = snake;
+            self.food = food;
         }
     }
 
