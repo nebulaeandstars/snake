@@ -25,8 +25,7 @@ impl App {
     ) -> App {
         println!("starting...");
 
-        let rng = rand::thread_rng();
-        let food = Food::new_food(calculate_food_pos(board_size.0, board_size.1));
+        let food = Food::new_food(get_random_grid_position(board_size.0, board_size.1));
 
         App {
             gl: gl,
@@ -96,10 +95,15 @@ impl App {
 
         // if the new head position overlaps the food,
         let snake_head = self.snake.get_head_pos();
+        let mut food_pos = self.food.get_position();
+
         if snake_head == self.food.get_position() {
-            // move the food to somewhere else
-            self.food
-                .set_position(calculate_food_pos(self.board_size.0, self.board_size.1));
+            // move the food to somewhere else until it hits a valid position.
+            while food_pos == snake_head || self.snake.overlaps(food_pos) {
+                food_pos = get_random_grid_position(self.board_size.0, self.board_size.1);
+                self.food.set_position(food_pos);
+            }
+
             // and grow the snake
             self.snake.grow(1);
         }
@@ -123,9 +127,9 @@ impl App {
 }
 
 
-fn calculate_food_pos(width: f32, height: f32) -> (f32, f32) {
+fn get_random_grid_position(board_width: f32, board_height: f32) -> (f32, f32) {
     return (
-        (rand::random::<f32>() * width).floor(),
-        (rand::random::<f32>() * height).floor(),
+        (rand::random::<f32>() * board_width).floor(),
+        (rand::random::<f32>() * board_height).floor(),
     );
 }

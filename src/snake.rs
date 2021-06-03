@@ -82,6 +82,17 @@ impl Snake {
     }
 
 
+    pub fn overlaps(&self, position: (f32, f32)) -> bool {
+        for square in self.get_squares().iter() {
+            if square.get_position() == position {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
     // return the vector of squares
     pub fn get_squares(&self) -> &Vec<Square> {
         return &self.squares;
