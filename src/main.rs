@@ -10,9 +10,6 @@ mod snake;
 mod square;
 
 use app::App;
-use direction::Direction;
-use snake::Snake;
-
 
 fn main() {
     let opengl = OpenGL::V3_2;
