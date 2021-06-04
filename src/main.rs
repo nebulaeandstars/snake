@@ -17,7 +17,7 @@ fn main() {
     const BACKGROUND_COLOR: [f32; 4] = [0.2, 0.2, 0.2, 1.0];
     const FLOOR_COLOR: [f32; 4] = [0.3, 0.3, 0.3, 1.0];
     const GRID_SIZE: f32 = 16.0;
-    const BOARD_SIZE: (f32, f32) = (10.0, 10.0);
+    const BOARD_SIZE: (f32, f32) = (20.0, 10.0);
 
     let mut window: GlutinWindow = WindowSettings::new("snake", [600, 400])
         .graphics_api(opengl)

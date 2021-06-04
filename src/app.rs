@@ -125,7 +125,7 @@ impl App {
         // move the snake.
         self.snake.iterate_movement();
 
-        // if the new head position overlaps the food,
+        // if the new head position overlaps the food, grow the snake and spawn new food.
         let snake_head = self.snake.get_head_pos();
         let mut food_pos = self.food.get_position();
 
@@ -140,7 +140,8 @@ impl App {
             self.snake.grow(1);
         }
 
-        if self.snake.overlaps(snake_head) {
+        // if the snake overlaps its tail or collides with a wall, reset the game.
+        if self.snake.overlaps(snake_head) || self.snake_head_is_outside_game() {
             // get a new snake and food
             let snake_pos = get_random_grid_position(self.board_size.0, self.board_size.1);
             let snake = Snake::new(snake_pos, Direction::Right);
@@ -171,6 +172,21 @@ impl App {
             }
             _ => current_direction,
         });
+    }
+
+    fn snake_head_is_outside_game(&self) -> bool {
+        let head_pos = self.snake.get_head_pos();
+
+        if head_pos.0 < 0.0
+            || head_pos.1 < 0.0
+            || head_pos.0 > self.board_size.0
+            || head_pos.1 > self.board_size.1
+        {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 }
 
