@@ -15,6 +15,7 @@ fn main() {
     let opengl = OpenGL::V3_2;
 
     const BACKGROUND_COLOR: [f32; 4] = [0.2, 0.2, 0.2, 1.0];
+    const FLOOR_COLOR: [f32; 4] = [0.3, 0.3, 0.3, 1.0];
     const GRID_SIZE: f32 = 16.0;
     const BOARD_SIZE: (f32, f32) = (10.0, 10.0);
 
@@ -29,6 +30,7 @@ fn main() {
     let mut app = App::new(
         GlGraphics::new(opengl),
         BACKGROUND_COLOR,
+        FLOOR_COLOR,
         GRID_SIZE,
         BOARD_SIZE,
     );

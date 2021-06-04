@@ -1,6 +1,7 @@
 pub struct App {
     gl: GlGraphics,
-    background: [f32; 4],
+    background_color: [f32; 4],
+    floor_color: [f32; 4],
     grid_size: f32,
     board_size: (f32, f32),
     snake: Snake,
@@ -18,7 +19,8 @@ use crate::square::Square;
 impl App {
     pub fn new(
         gl: GlGraphics,
-        background: [f32; 4],
+        background_color: [f32; 4],
+        floor_color: [f32; 4],
         grid_size: f32,
         board_size: (f32, f32),
     ) -> App {
@@ -37,7 +39,8 @@ impl App {
 
         App {
             gl: gl,
-            background: background,
+            background_color: background_color,
+            floor_color: floor_color,
             grid_size: grid_size,
             board_size: board_size,
             snake: snake,
@@ -48,29 +51,41 @@ impl App {
     pub fn render(&mut self, args: &RenderArgs) {
         use graphics::*;
 
-        let background: [f32; 4] = self.background;
+        let background: [f32; 4] = self.background_color;
+        let floor_color: [f32; 4] = self.floor_color;
         let grid_size: f32 = self.grid_size;
+        let board_size: (f32, f32) = self.board_size;
         let snake_squares: &Vec<Square> = self.snake.get_squares();
         let food: &Food = &self.food;
+        const FLOOR_BUFFER: f32 = 3.0;
 
         // let (x, y) = (args.window_size[0] / 2.0, args.window_size[1] / 2.0);
 
         self.gl.draw(args.viewport(), |c, gl| {
+            // draw the background and floor
             clear(background, gl);
+
+            let board_offset = (2.0, 2.0);
+            let floor_render = rectangle::rectangle_by_corners(
+                (0.0 - FLOOR_BUFFER).into(),
+                (0.0 - FLOOR_BUFFER).into(),
+                ((board_size.0 + 1.0) * grid_size + FLOOR_BUFFER).into(),
+                ((board_size.1 + 1.0) * grid_size + FLOOR_BUFFER).into(),
+            );
+            let transform = c.transform.trans(
+                (board_offset.0 * grid_size).into(),
+                (board_offset.1 * grid_size).into(),
+            );
+            rectangle(floor_color, floor_render, transform, gl);
 
             // draw the snake's tail
             for snake_square in snake_squares[1..].iter() {
                 let size = snake_square.get_size();
-                let x = (snake_square.get_position().0 + 1.0 - (size / 2.0)) * grid_size;
-                let y = (snake_square.get_position().1 + 1.0 - (size / 2.0)) * grid_size;
+                let x = (snake_square.get_position().0 + (1.0 - size) / 2.0) * grid_size;
+                let y = (snake_square.get_position().1 + (1.0 - size) / 2.0) * grid_size;
 
-                let snake_square_render = rectangle::square(
-                    snake_square.get_position().0.into(),
-                    snake_square.get_position().1.into(),
-                    (grid_size * size).into(),
-                );
-
-                let transform = c.transform.trans(x.into(), y.into());
+                let snake_square_render =
+                    rectangle::square(x.into(), y.into(), (grid_size * size).into());
 
                 rectangle(
                     snake_square.get_color().clone(),
@@ -83,15 +98,11 @@ impl App {
             // draw the snake's head
             let snake_head = &snake_squares[0];
             let size = snake_head.get_size();
-            let x = (snake_head.get_position().0 + 1.0 - (size / 2.0)) * grid_size;
-            let y = (snake_head.get_position().1 + 1.0 - (size / 2.0)) * grid_size;
+            let x = (snake_head.get_position().0 + (1.0 - size) / 2.0) * grid_size;
+            let y = (snake_head.get_position().1 + (1.0 - size) / 2.0) * grid_size;
 
-            let snake_square_render = rectangle::square(
-                snake_head.get_position().0.into(),
-                snake_head.get_position().1.into(),
-                (grid_size * size).into(),
-            );
-            let transform = c.transform.trans(x.into(), y.into());
+            let snake_square_render =
+                rectangle::square(x.into(), y.into(), (grid_size * size).into());
             rectangle(
                 snake_head.get_color().clone(),
                 snake_square_render,
@@ -101,15 +112,11 @@ impl App {
 
             // draw the food
             let size = food.get_size();
-            let x = (food.get_position().0 + 1.0 - (size / 2.0)) * grid_size;
-            let y = (food.get_position().1 + 1.0 - (size / 2.0)) * grid_size;
+            let x = (food.get_position().0 + (1.0 - size) / 2.0) * grid_size;
+            let y = (food.get_position().1 + (1.0 - size) / 2.0) * grid_size;
 
-            let food_square_render = rectangle::square(
-                food.get_position().0.into(),
-                food.get_position().1.into(),
-                (grid_size * size).into(),
-            );
-            let transform = c.transform.trans(x.into(), y.into());
+            let food_square_render =
+                rectangle::square(x.into(), y.into(), (grid_size * size).into());
             rectangle(food.get_color().clone(), food_square_render, transform, gl);
         });
     }
