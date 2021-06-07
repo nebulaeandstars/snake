@@ -1,8 +1,11 @@
+use crate::colors::Color;
+
 /// Represents the player. Contains a vector of squares, a direction, and a colour. Responsible for
 /// updating its own position on the board.
 pub struct Snake {
     squares: Vec<Square>,
     direction: Direction,
+    colors: (Color, Color),
 }
 
 
@@ -10,24 +13,23 @@ use crate::direction::Direction;
 use crate::square::Square;
 
 // size of the squares that make up a snake.
-const SNAKE_HEAD_SIZE: f32 = 1.0;
-const SNAKE_TAIL_SIZE: f32 = 0.9;
-const SNAKE_HEAD_COLOR: [f32; 4] = [0.4, 0.9, 0.75, 1.0];
-const SNAKE_TAIL_COLOR: [f32; 4] = [0.4, 0.75, 0.9, 1.0];
+const HEAD_SIZE: f64 = 1.0;
+const TAIL_SIZE: f64 = 0.9;
 
 impl Snake {
     // returns a new Snake, given an intial position, a direction, and a color.
-    pub fn new(position: (f32, f32), direction: Direction) -> Snake {
+    pub fn new(position: (f64, f64), direction: Direction, colors: (Color, Color)) -> Snake {
         // start the snake with two body parts occupying the same position.
         // it will "uncoil" when the player moves and the game starts.
         let squares: Vec<Square> = vec![
-            Square::new(position, SNAKE_HEAD_COLOR, SNAKE_HEAD_SIZE),
-            Square::new(position, SNAKE_TAIL_COLOR, SNAKE_TAIL_SIZE),
+            Square::new(position, colors.0, HEAD_SIZE),
+            Square::new(position, colors.1, TAIL_SIZE),
         ];
 
         Snake {
             squares: squares,
             direction: direction,
+            colors: colors,
         }
     }
 
@@ -42,15 +44,12 @@ impl Snake {
     pub fn grow(&mut self, amount: u8) {
         for _ in 0..amount {
             // find the end of the snake
-            let tail_position: (f32, f32) =
+            let tail_position: (f64, f64) =
                 self.squares[self.squares.len() - 1].get_position().clone();
 
             // add a new square, overlapping the tail.
-            self.squares.push(Square::new(
-                tail_position,
-                SNAKE_TAIL_COLOR,
-                SNAKE_TAIL_SIZE,
-            ));
+            self.squares
+                .push(Square::new(tail_position, self.colors.1, TAIL_SIZE));
         }
     }
 
@@ -70,19 +69,19 @@ impl Snake {
         }
 
         // set the old head square to be a tail square.
-        self.squares[0].set_color(SNAKE_TAIL_COLOR);
-        self.squares[0].set_size(SNAKE_TAIL_SIZE);
+        self.squares[0].set_color(self.colors.1);
+        self.squares[0].set_size(TAIL_SIZE);
 
         // create a new head by addding a new square to the front of the snake.
         self.squares
-            .insert(0, Square::new(position, SNAKE_HEAD_COLOR, SNAKE_HEAD_SIZE));
+            .insert(0, Square::new(position, self.colors.0, HEAD_SIZE));
 
         // pop the tail of the snake out of the list.
         self.squares.remove(self.squares.len() - 1);
     }
 
 
-    pub fn overlaps(&self, position: (f32, f32)) -> bool {
+    pub fn overlaps(&self, position: (f64, f64)) -> bool {
         for square in self.get_squares()[1..].iter() {
             if square.get_position() == position {
                 return true;
@@ -99,7 +98,7 @@ impl Snake {
     }
 
     // return the vector of squares
-    pub fn get_head_pos(&self) -> (f32, f32) {
+    pub fn get_head_pos(&self) -> (f64, f64) {
         return self.squares[0].get_position();
     }
 

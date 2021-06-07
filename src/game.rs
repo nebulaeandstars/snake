@@ -1,9 +1,8 @@
-pub struct App {
+pub struct Game {
     gl: GlGraphics,
-    background_color: [f32; 4],
-    floor_color: [f32; 4],
-    grid_size: f32,
-    board_size: (f32, f32),
+    grid_size: f64,
+    board_size: (f64, f64),
+    colors: GameColors,
     input_buffer: InputBuffer,
     snake: Snake,
     food: Food,
@@ -12,39 +11,33 @@ pub struct App {
 use opengl_graphics::GlGraphics;
 use piston::input::{Button, Key, RenderArgs};
 
+use crate::colors::*;
 use crate::direction::Direction;
 use crate::input::InputBuffer;
 use crate::snake::Snake;
 use crate::square::Food;
 use crate::square::Square;
 
-impl App {
-    pub fn new(
-        gl: GlGraphics,
-        background_color: [f32; 4],
-        floor_color: [f32; 4],
-        grid_size: f32,
-        board_size: (f32, f32),
-    ) -> App {
+impl Game {
+    pub fn new(gl: GlGraphics, colors: GameColors, grid_size: f64, board_size: (f64, f64)) -> Game {
         println!("starting...");
 
         // get an initial snake and food
         let snake_pos = get_random_grid_position(board_size.0, board_size.1);
-        let snake = Snake::new(snake_pos, Direction::Right);
+        let snake = Snake::new(snake_pos, Direction::Right, colors.get_snake_colors());
 
         let mut food_pos = get_random_grid_position(board_size.0, board_size.1);
         while snake_pos != food_pos && snake.overlaps(food_pos) {
             food_pos = get_random_grid_position(board_size.0, board_size.1);
         }
-        let food = Food::new_food(food_pos);
+        let food = Food::new_food(food_pos, colors.get_food_color());
 
 
-        App {
+        Game {
             gl: gl,
-            background_color: background_color,
-            floor_color: floor_color,
             grid_size: grid_size,
             board_size: board_size,
+            colors: colors,
             input_buffer: InputBuffer::new(),
             snake: snake,
             food: food,
@@ -54,13 +47,12 @@ impl App {
     pub fn render(&mut self, args: &RenderArgs) {
         use graphics::*;
 
-        let background: [f32; 4] = self.background_color;
-        let floor_color: [f32; 4] = self.floor_color;
-        let grid_size: f32 = self.grid_size;
-        let board_size: (f32, f32) = self.board_size;
+        let (background, floor_color) = self.colors.get_room_colors();
+        let grid_size: f64 = self.grid_size;
+        let board_size: (f64, f64) = self.board_size;
         let snake_squares: &Vec<Square> = self.snake.get_squares();
         let food: &Food = &self.food;
-        const FLOOR_BUFFER: f32 = 3.0;
+        const FLOOR_BUFFER: f64 = 3.0;
 
         // let (x, y) = (args.window_size[0] / 2.0, args.window_size[1] / 2.0);
 
@@ -70,15 +62,14 @@ impl App {
 
             let board_offset = (2.0, 2.0);
             let floor_render = rectangle::rectangle_by_corners(
-                (0.0 - FLOOR_BUFFER).into(),
-                (0.0 - FLOOR_BUFFER).into(),
-                ((board_size.0 + 1.0) * grid_size + FLOOR_BUFFER).into(),
-                ((board_size.1 + 1.0) * grid_size + FLOOR_BUFFER).into(),
+                0.0 - FLOOR_BUFFER,
+                0.0 - FLOOR_BUFFER,
+                (board_size.0 + 1.0) * grid_size + FLOOR_BUFFER,
+                (board_size.1 + 1.0) * grid_size + FLOOR_BUFFER,
             );
-            let transform = c.transform.trans(
-                (board_offset.0 * grid_size).into(),
-                (board_offset.1 * grid_size).into(),
-            );
+            let transform = c
+                .transform
+                .trans(board_offset.0 * grid_size, board_offset.1 * grid_size);
             rectangle(floor_color, floor_render, transform, gl);
 
             // draw the snake's tail
@@ -87,8 +78,7 @@ impl App {
                 let x = (snake_square.get_position().0 + (1.0 - size) / 2.0) * grid_size;
                 let y = (snake_square.get_position().1 + (1.0 - size) / 2.0) * grid_size;
 
-                let snake_square_render =
-                    rectangle::square(x.into(), y.into(), (grid_size * size).into());
+                let snake_square_render = rectangle::square(x, y, grid_size * size);
 
                 rectangle(
                     snake_square.get_color().clone(),
@@ -104,8 +94,7 @@ impl App {
             let x = (snake_head.get_position().0 + (1.0 - size) / 2.0) * grid_size;
             let y = (snake_head.get_position().1 + (1.0 - size) / 2.0) * grid_size;
 
-            let snake_square_render =
-                rectangle::square(x.into(), y.into(), (grid_size * size).into());
+            let snake_square_render = rectangle::square(x, y, grid_size * size);
             rectangle(
                 snake_head.get_color().clone(),
                 snake_square_render,
@@ -118,8 +107,7 @@ impl App {
             let x = (food.get_position().0 + (1.0 - size) / 2.0) * grid_size;
             let y = (food.get_position().1 + (1.0 - size) / 2.0) * grid_size;
 
-            let food_square_render =
-                rectangle::square(x.into(), y.into(), (grid_size * size).into());
+            let food_square_render = rectangle::square(x, y, grid_size * size);
             rectangle(food.get_color().clone(), food_square_render, transform, gl);
         });
     }
@@ -150,13 +138,13 @@ impl App {
         if self.snake.overlaps(snake_head) || self.snake_head_is_outside_game() {
             // get a new snake and food
             let snake_pos = get_random_grid_position(self.board_size.0, self.board_size.1);
-            let snake = Snake::new(snake_pos, Direction::Right);
+            let snake = Snake::new(snake_pos, Direction::Right, self.colors.get_snake_colors());
 
             let mut food_pos = get_random_grid_position(self.board_size.0, self.board_size.1);
             while snake_pos != food_pos && snake.overlaps(food_pos) {
                 food_pos = get_random_grid_position(self.board_size.0, self.board_size.1);
             }
-            let food = Food::new_food(food_pos);
+            let food = Food::new_food(food_pos, self.colors.get_food_color());
 
             // then set throw away the current snake and food for the new ones
             self.snake = snake;
@@ -205,9 +193,9 @@ impl App {
 }
 
 
-fn get_random_grid_position(board_width: f32, board_height: f32) -> (f32, f32) {
+fn get_random_grid_position(board_width: f64, board_height: f64) -> (f64, f64) {
     return (
-        (rand::random::<f32>() * board_width).floor(),
-        (rand::random::<f32>() * board_height).floor(),
+        (rand::random::<f64>() * board_width).floor(),
+        (rand::random::<f64>() * board_height).floor(),
     );
 }

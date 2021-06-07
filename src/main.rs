@@ -4,21 +4,29 @@ use piston::event_loop::{EventLoop, EventSettings, Events};
 use piston::input::{ButtonEvent, ButtonState, RenderEvent, UpdateEvent};
 use piston::window::WindowSettings;
 
-mod app;
+mod colors;
 mod direction;
+mod game;
 mod input;
 mod snake;
 mod square;
 
-use app::App;
+use colors::*;
+use game::Game;
 
 fn main() {
     let opengl = OpenGL::V3_2;
 
-    const BACKGROUND_COLOR: [f32; 4] = [0.2, 0.2, 0.2, 1.0];
-    const FLOOR_COLOR: [f32; 4] = [0.3, 0.3, 0.3, 1.0];
-    const GRID_SIZE: f32 = 16.0;
-    const BOARD_SIZE: (f32, f32) = (20.0, 10.0);
+    const GRID_SIZE: f64 = 16.0;
+    const BOARD_SIZE: (f64, f64) = (20.0, 10.0);
+
+    let game_colors: GameColors = GameColors::new(
+        [0.4, 0.9, 0.75, 1.0], // snake head
+        [0.4, 0.75, 0.9, 1.0], // snake tail
+        [0.2, 0.2, 0.2, 1.0],  // background
+        [0.3, 0.3, 0.3, 1.0],  // floor
+        [0.9, 0.4, 0.4, 1.0],  // food
+    );
 
     let mut window: GlutinWindow = WindowSettings::new("snake", [600, 400])
         .graphics_api(opengl)
@@ -28,28 +36,22 @@ fn main() {
         .unwrap();
 
 
-    let mut app = App::new(
-        GlGraphics::new(opengl),
-        BACKGROUND_COLOR,
-        FLOOR_COLOR,
-        GRID_SIZE,
-        BOARD_SIZE,
-    );
+    let mut game = Game::new(GlGraphics::new(opengl), game_colors, GRID_SIZE, BOARD_SIZE);
 
 
     let mut events = Events::new(EventSettings::new()).ups(4);
     while let Some(event) = events.next(&mut window) {
         if let Some(args) = event.render_args() {
-            app.render(&args);
+            game.render(&args);
         }
 
         if let Some(_) = event.update_args() {
-            app.update();
+            game.update();
         }
 
         if let Some(args) = event.button_args() {
             if args.state == ButtonState::Press {
-                app.handle_button(args.button);
+                game.handle_button(args.button);
             }
         }
     }
