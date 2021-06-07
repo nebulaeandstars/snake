@@ -6,6 +6,7 @@ use piston::window::WindowSettings;
 
 mod app;
 mod direction;
+mod input;
 mod snake;
 mod square;
 
@@ -48,7 +49,7 @@ fn main() {
 
         if let Some(args) = event.button_args() {
             if args.state == ButtonState::Press {
-                app.handle_button(&args.button);
+                app.handle_button(args.button);
             }
         }
     }

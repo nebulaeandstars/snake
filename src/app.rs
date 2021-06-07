@@ -4,6 +4,7 @@ pub struct App {
     floor_color: [f32; 4],
     grid_size: f32,
     board_size: (f32, f32),
+    input_buffer: InputBuffer,
     snake: Snake,
     food: Food,
 }
@@ -12,6 +13,7 @@ use opengl_graphics::GlGraphics;
 use piston::input::{Button, Key, RenderArgs};
 
 use crate::direction::Direction;
+use crate::input::InputBuffer;
 use crate::snake::Snake;
 use crate::square::Food;
 use crate::square::Square;
@@ -43,6 +45,7 @@ impl App {
             floor_color: floor_color,
             grid_size: grid_size,
             board_size: board_size,
+            input_buffer: InputBuffer::new(),
             snake: snake,
             food: food,
         }
@@ -122,6 +125,9 @@ impl App {
     }
 
     pub fn update(&mut self) {
+        // update the snake's direction if needed.
+        self.update_snake_direction();
+
         // move the snake.
         self.snake.iterate_movement();
 
@@ -158,20 +164,28 @@ impl App {
         }
     }
 
-    pub fn handle_button(&mut self, button: &Button) {
-        let current_direction: Direction = self.snake.get_direction().clone();
+    pub fn handle_button(&mut self, button: Button) {
+        // match the user input to get the direction
+        let direction: Option<Direction> = match button {
+            Button::Keyboard(Key::Up) => Some(Direction::Up),
+            Button::Keyboard(Key::Down) => Some(Direction::Down),
+            Button::Keyboard(Key::Left) => Some(Direction::Left),
+            Button::Keyboard(Key::Right) => Some(Direction::Right),
+            _ => None,
+        };
 
-        self.snake.update_direction(match button {
-            &Button::Keyboard(Key::Up) if current_direction != Direction::Down => Direction::Up,
-            &Button::Keyboard(Key::Down) if current_direction != Direction::Up => Direction::Down,
-            &Button::Keyboard(Key::Left) if current_direction != Direction::Right => {
-                Direction::Left
-            }
-            &Button::Keyboard(Key::Right) if current_direction != Direction::Left => {
-                Direction::Right
-            }
-            _ => current_direction,
-        });
+        if direction.is_some() {
+            self.input_buffer
+                .push(direction.unwrap(), self.snake.get_direction());
+        }
+    }
+
+    fn update_snake_direction(&mut self) {
+        let direction = self.input_buffer.pop();
+
+        if direction.is_some() {
+            self.snake.update_direction(direction.unwrap());
+        }
     }
 
     fn snake_head_is_outside_game(&self) -> bool {

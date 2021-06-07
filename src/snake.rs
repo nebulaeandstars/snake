@@ -103,7 +103,7 @@ impl Snake {
         return self.squares[0].get_position();
     }
 
-    pub fn get_direction(&self) -> &Direction {
-        return &self.direction;
+    pub fn get_direction(&self) -> Direction {
+        return self.direction.clone();
     }
 }
