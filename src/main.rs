@@ -17,7 +17,7 @@ use game::Game;
 fn main() {
     let opengl = OpenGL::V3_2;
 
-    const GRID_SIZE: f64 = 20.0;
+    const GRID_SIZE: f64 = 30.0;
     const BOARD_SIZE: (f64, f64) = (20.0, 10.0);
 
     let game_colors: GameColors = GameColors::new(
@@ -28,12 +28,19 @@ fn main() {
         [0.9, 0.4, 0.4, 1.0],  // food
     );
 
-    let mut window: GlutinWindow = WindowSettings::new("snake", [600, 400])
-        .graphics_api(opengl)
-        .exit_on_esc(true)
-        .samples(0)
-        .build()
-        .unwrap();
+    let mut window: GlutinWindow = WindowSettings::new(
+        "snake",
+        [
+            GRID_SIZE * (BOARD_SIZE.0 + 5.0),
+            GRID_SIZE * (BOARD_SIZE.1 + 5.0),
+        ],
+    )
+    .graphics_api(opengl)
+    .exit_on_esc(true)
+    .resizable(false)
+    .samples(0)
+    .build()
+    .unwrap();
 
 
     let mut game = Game::new(GlGraphics::new(opengl), game_colors, GRID_SIZE, BOARD_SIZE);
