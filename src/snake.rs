@@ -14,7 +14,7 @@ use crate::square::Square;
 
 // size of the squares that make up a snake.
 const HEAD_SIZE: f64 = 1.0;
-const TAIL_SIZE: f64 = 0.9;
+const TAIL_SIZE: f64 = 0.9375;
 
 impl Snake {
     // returns a new Snake, given an intial position, a direction, and a color.
