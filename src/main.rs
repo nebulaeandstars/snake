@@ -17,7 +17,7 @@ use game::Game;
 fn main() {
     let opengl = OpenGL::V3_2;
 
-    const GRID_SIZE: f64 = 16.0;
+    const GRID_SIZE: f64 = 20.0;
     const BOARD_SIZE: (f64, f64) = (20.0, 10.0);
 
     let game_colors: GameColors = GameColors::new(
@@ -31,7 +31,7 @@ fn main() {
     let mut window: GlutinWindow = WindowSettings::new("snake", [600, 400])
         .graphics_api(opengl)
         .exit_on_esc(true)
-        .samples(2)
+        .samples(0)
         .build()
         .unwrap();
 
